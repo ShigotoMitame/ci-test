@@ -122,13 +122,38 @@ impl Into<u8> for PinValueArray {
 impl From<u8> for PinValueArray {
     fn from(value: u8) -> Self {
         let mut result = [PinValue::Low; 8];
+        let value = value.reverse_bits();
         for i in 0..8 {
-            match (value >> 7 & 0x01) == 1 {
+            match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinValue::High,
                 false => result[i] = PinValue::Low
             } 
         }
         PinValueArray(result)
+    }
+}
+
+#[cfg(test)]
+mod pin_value_array_tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let array: PinValueArray = 0b00110011u8.into();
+
+        assert_eq!(
+            array,
+            PinValueArray([
+                PinValue::High, 
+                PinValue::High, 
+                PinValue::Low, 
+                PinValue::Low, 
+                PinValue::High, 
+                PinValue::High, 
+                PinValue::Low, 
+                PinValue::Low, 
+            ])
+        )
     }
 }
 
@@ -158,8 +183,9 @@ impl Into<u8> for PinDirectionArray {
 impl From<u8> for PinDirectionArray {
     fn from(value: u8) -> Self {
         let mut result = [PinDirection::Input; 8];
+        let value = value.reverse_bits();
         for i in 0..8 {
-            match (value >> 7 & 0x01) == 1 {
+            match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinDirection::Output,
                 false => result[i] = PinDirection::Input
             } 
@@ -167,6 +193,31 @@ impl From<u8> for PinDirectionArray {
         PinDirectionArray(result)
     }
 }
+
+#[cfg(test)]
+mod pin_direction_array_tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let array: PinDirectionArray = 0b00110011u8.into();
+
+        assert_eq!(
+            array,
+            PinDirectionArray([
+                PinDirection::Output,
+                PinDirection::Output,
+                PinDirection::Input,
+                PinDirection::Input,
+                PinDirection::Output,
+                PinDirection::Output,
+                PinDirection::Input,
+                PinDirection::Input,
+            ])
+        )
+    }
+}
+
 
 #[derive(Debug)]
 pub enum Command {
