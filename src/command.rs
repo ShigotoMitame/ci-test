@@ -112,8 +112,8 @@ impl Into<u8> for PinValueArray {
             .iter()
             .enumerate()
             .map(|(i, val)| match val {
-                PinValue::High => 0 << i,
-                PinValue::Low => 1 << i,
+                PinValue::High => 1 << i,
+                PinValue::Low => 0 << i,
             })
             .fold(0u8, |acc, val| acc | val)
     }
