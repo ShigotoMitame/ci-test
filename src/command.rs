@@ -79,7 +79,6 @@ impl Into<FullDataShiftOptions> for DataShiftOptions{
         FullDataShiftOptions {
             read_clock_direction: self.clock_direction,
             bit_direction: self.bit_direction,
-            read_tdo: true,
             ..Default::default()
         }
     }
@@ -91,20 +90,20 @@ impl Into<u8> for DataShiftOptions {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PinRange {
     High,
     Low,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PinValue {
     High,
     Low,
 }
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct PinValueArray([PinValue; 8]);
 
 impl Into<u8> for PinValueArray {
@@ -120,14 +119,27 @@ impl Into<u8> for PinValueArray {
     }
 }
 
-#[derive(Debug)]
+impl From<u8> for PinValueArray {
+    fn from(value: u8) -> Self {
+        let mut result = [PinValue::Low; 8];
+        for i in 0..8 {
+            match (value >> 7 & 0x01) == 1 {
+                true => result[i] = PinValue::High,
+                false => result[i] = PinValue::Low
+            } 
+        }
+        PinValueArray(result)
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PinDirection {
     Input,
     Output,
 }
 
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct PinDirectionArray([PinDirection; 8]);
 
 impl Into<u8> for PinDirectionArray {
@@ -140,6 +152,19 @@ impl Into<u8> for PinDirectionArray {
                 PinDirection::Output => 1 << i,
             })
             .fold(0u8, |acc, val| acc | val)
+    }
+}
+
+impl From<u8> for PinDirectionArray {
+    fn from(value: u8) -> Self {
+        let mut result = [PinDirection::Input; 8];
+        for i in 0..8 {
+            match (value >> 7 & 0x01) == 1 {
+                true => result[i] = PinDirection::Output,
+                false => result[i] = PinDirection::Input
+            } 
+        }
+        PinDirectionArray(result)
     }
 }
 
@@ -212,20 +237,38 @@ impl Into<Vec<u8>> for Command {
                 bits,
                 length,
             } => {
-                let opcode = Into::<u8>::into(options) | 0x02;
+                let full_options = FullDataShiftOptions {
+                    write_clock_direction: options.clock_direction,
+                    bit_direction: options.bit_direction,
+                    write_tdi: true,
+                    ..Default::default()
+                };
+                let opcode: u8 = full_options.into();
 
-                vec![opcode, length - 1, bits]
+                vec![opcode | 0x02, length - 1, bits]
             }
             Self::ReadDataShiftBits {
                 options,
                 length,
             } => {
-                let opcode = Into::<u8>::into(options) | 0x02;
+                let full_options = FullDataShiftOptions {
+                    write_clock_direction: options.clock_direction,
+                    bit_direction: options.bit_direction,
+                    read_tdo: true,
+                    ..Default::default()
+                };
+                let opcode: u8 = full_options.into();
 
-                vec![opcode, length - 1]
+                vec![opcode | 0x02, length - 1]
             }
             Self::WriteDataShiftBytes { options, bytes } => {
-                let opcode = Into::<u8>::into(options);
+                let full_options = FullDataShiftOptions {
+                    write_clock_direction: options.clock_direction,
+                    bit_direction: options.bit_direction,
+                    write_tdi: true,
+                    ..Default::default()
+                };
+                let opcode: u8 = full_options.into();
 
                 let mut result = vec![opcode];
                 result.extend_from_slice(&((bytes.len() - 1) as u16).to_le_bytes());
@@ -234,7 +277,13 @@ impl Into<Vec<u8>> for Command {
                 result
             }
             Self::ReadDataShiftBytes { options, length } => {
-                let opcode = Into::<u8>::into(options);
+                let full_options = FullDataShiftOptions {
+                    write_clock_direction: options.clock_direction,
+                    bit_direction: options.bit_direction,
+                    read_tdo: true,
+                    ..Default::default()
+                };
+                let opcode: u8 = full_options.into();
 
                 let mut result = vec![opcode];
                 result.extend_from_slice(&(length - 1).to_le_bytes());
