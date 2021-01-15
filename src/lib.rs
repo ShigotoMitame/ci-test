@@ -43,6 +43,13 @@ impl Builder {
         }
     }
 
+    pub fn read_pins(self, range: PinRange) -> ReadPinsBuilder {
+        ReadPinsBuilder {
+            parent: self,
+            range,
+        }
+    }
+
     pub fn set_frequency(self, frequency: f64) -> SetFrequencyBuilder {
         SetFrequencyBuilder {
             parent: self,
@@ -220,6 +227,30 @@ impl WaitForIoBuilder {
     fn commit(mut self) -> Builder {
         self.parent.commands.push(
             Command::WaitForIo {value: self.value},
+        );
+
+        self.parent
+    }
+
+    pub fn then(self) -> Builder {
+        self.commit()
+    }
+
+    pub fn build(self) -> CommandList {
+        self.commit().build()
+    }
+}
+
+#[derive(Debug)]
+pub struct ReadPinsBuilder {
+    parent: Builder,
+    range: PinRange,
+}
+
+impl ReadPinsBuilder {
+    fn commit(mut self) -> Builder {
+        self.parent.commands.push(
+            Command::ReadBits {range: self.range},
         );
 
         self.parent
