@@ -49,7 +49,14 @@ impl Builder {
             frequency
         }
     }
-        
+
+    pub fn wait_for_io(self, value: PinValue) -> WaitForIoBuilder {
+        WaitForIoBuilder {
+            parent: self,
+            value
+        }
+    }
+
     pub fn build(self) -> CommandList {
         CommandList(self.commands)
     }
@@ -92,7 +99,7 @@ impl ReadBuilder {
         self.parent
     }
 
-    pub fn then(self) -> Builder { 
+    pub fn then(self) -> Builder {
         self.commit()
     }
 
@@ -138,7 +145,7 @@ impl WriteBuilder {
         self.parent
     }
 
-    pub fn then(self) -> Builder { 
+    pub fn then(self) -> Builder {
         self.commit()
     }
 
@@ -161,14 +168,14 @@ impl SetPinsBuilder {
             Command::SetBits {
                 range: self.range,
                 value: self.value.into(),
-                direction: self.mask.into() 
+                direction: self.mask.into()
             }
         );
 
         self.parent
     }
 
-    pub fn then(self) -> Builder { 
+    pub fn then(self) -> Builder {
         self.commit()
     }
 
@@ -187,14 +194,38 @@ impl SetFrequencyBuilder {
     fn commit(mut self) -> Builder {
         self.parent.commands.push(
             Command::SetClockDivisor {
-                divisor: (6_000_000f64 / self.frequency - 0.5).floor() as u16   
+                divisor: (6_000_000f64 / self.frequency - 0.5).floor() as u16
             }
         );
 
         self.parent
     }
 
-    pub fn then(self) -> Builder { 
+    pub fn then(self) -> Builder {
+        self.commit()
+    }
+
+    pub fn build(self) -> CommandList {
+        self.commit().build()
+    }
+}
+
+#[derive(Debug)]
+pub struct WaitForIoBuilder {
+    parent: Builder,
+    value: PinValue
+}
+
+impl WaitForIoBuilder {
+    fn commit(mut self) -> Builder {
+        self.parent.commands.push(
+            Command::WaitForIo {value: self.value},
+        );
+
+        self.parent
+    }
+
+    pub fn then(self) -> Builder {
         self.commit()
     }
 
@@ -211,15 +242,15 @@ mod write_builder_tests {
     #[test]
     fn syntax_test() {
         let data = vec![0x10, 0x01, 0x20, 0x01];
-        
+
         let commands = Builder::new()
             .write_data(data)
-            .with_clock_direction(ClockDirection::Rising) 
+            .with_clock_direction(ClockDirection::Rising)
             .with_bit_direction(BitDirection::MsbFirst)
             .build();
-         
+
         let command_bytes: Vec<u8> = commands.into_iter().collect();
-        
+
         assert_eq!(command_bytes, vec![0x10, 0x03, 0x00, 0x10, 0x01, 0x20, 0x01]);
     }
 }
@@ -230,15 +261,15 @@ mod read_builder_tests {
 
     #[test]
     fn syntax_test() {
-         
+
         let commands = Builder::new()
             .read_data(15)
-            .with_clock_direction(ClockDirection::Rising) 
+            .with_clock_direction(ClockDirection::Rising)
             .with_bit_direction(BitDirection::MsbFirst)
             .build();
-         
+
         let command_bytes: Vec<u8> = commands.into_iter().collect();
-        
+
         assert_eq!(command_bytes, vec![0x20, 0x0e, 0x00]);
     }
 }
@@ -252,9 +283,9 @@ mod set_freq_tests {
         let commands = Builder::new()
             .set_frequency(5000.0)
             .build();
-         
+
         let command_bytes: Vec<u8> = commands.into_iter().collect();
-        
+
         assert_eq!(command_bytes, vec![0x86, 0xAF , 0x04]);
     }
 }

@@ -127,7 +127,7 @@ impl From<u8> for PinValueArray {
             match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinValue::High,
                 false => result[i] = PinValue::Low
-            } 
+            }
         }
         PinValueArray(result)
     }
@@ -144,14 +144,14 @@ mod pin_value_array_tests {
         assert_eq!(
             array,
             PinValueArray([
-                PinValue::High, 
-                PinValue::High, 
-                PinValue::Low, 
-                PinValue::Low, 
-                PinValue::High, 
-                PinValue::High, 
-                PinValue::Low, 
-                PinValue::Low, 
+                PinValue::High,
+                PinValue::High,
+                PinValue::Low,
+                PinValue::Low,
+                PinValue::High,
+                PinValue::High,
+                PinValue::Low,
+                PinValue::Low,
             ])
         )
     }
@@ -188,7 +188,7 @@ impl From<u8> for PinDirectionArray {
             match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinDirection::Output,
                 false => result[i] = PinDirection::Input
-            } 
+            }
         }
         PinDirectionArray(result)
     }
@@ -252,6 +252,9 @@ pub enum Command {
     SetClockDivisor {
         divisor: u16,
     },
+    WaitForIo {
+        value: PinValue,
+    }
 }
 
 impl Command {
@@ -276,6 +279,7 @@ impl Command {
             Self::ReadBits { range: _ } => 1,
             Self::SetLoopback { enable: _ } => 0,
             Self::SetClockDivisor { divisor: _ } => 0,
+            Self::WaitForIo { value } => 1,
         }
     }
 }
@@ -373,6 +377,12 @@ impl Into<Vec<u8>> for Command {
                 let mut result = vec![0x86];
                 result.extend_from_slice(&divisor.to_le_bytes());
                 result
+            }
+            Self::WaitForIo { value } => {
+                match value {
+                    PinValue::High => vec![0x88],
+                    PinValue::Low => vec![0x89],
+                }
             }
         }
     }
