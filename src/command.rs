@@ -109,8 +109,8 @@ impl Into<u8> for PinValueArray {
             .iter()
             .enumerate()
             .map(|(i, val)| match val {
-                PinValue::High => 0 << i,
-                PinValue::Low => 1 << i,
+                PinValue::High => 1 << i,
+                PinValue::Low => 0 << i,
             })
             .fold(0u8, |acc, val| acc | val)
     }
@@ -119,13 +119,38 @@ impl Into<u8> for PinValueArray {
 impl From<u8> for PinValueArray {
     fn from(value: u8) -> Self {
         let mut result = [PinValue::Low; 8];
+        let value = value.reverse_bits();
         for i in 0..8 {
-            match (value >> 7 & 0x01) == 1 {
+            match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinValue::High,
-                false => result[i] = PinValue::Low,
+                false => result[i] = PinValue::Low
             }
         }
         PinValueArray(result)
+    }
+}
+
+#[cfg(test)]
+mod pin_value_array_tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let array: PinValueArray = 0b00110011u8.into();
+
+        assert_eq!(
+            array,
+            PinValueArray([
+                PinValue::High,
+                PinValue::High,
+                PinValue::Low,
+                PinValue::Low,
+                PinValue::High,
+                PinValue::High,
+                PinValue::Low,
+                PinValue::Low,
+            ])
+        )
     }
 }
 
@@ -155,15 +180,41 @@ impl Into<u8> for PinDirectionArray {
 impl From<u8> for PinDirectionArray {
     fn from(value: u8) -> Self {
         let mut result = [PinDirection::Input; 8];
+        let value = value.reverse_bits();
         for i in 0..8 {
-            match (value >> 7 & 0x01) == 1 {
+            match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinDirection::Output,
-                false => result[i] = PinDirection::Input,
+                false => result[i] = PinDirection::Input
             }
         }
         PinDirectionArray(result)
     }
 }
+
+#[cfg(test)]
+mod pin_direction_array_tests {
+    use super::*;
+
+    #[test]
+    fn test() {
+        let array: PinDirectionArray = 0b00110011u8.into();
+
+        assert_eq!(
+            array,
+            PinDirectionArray([
+                PinDirection::Output,
+                PinDirection::Output,
+                PinDirection::Input,
+                PinDirection::Input,
+                PinDirection::Output,
+                PinDirection::Output,
+                PinDirection::Input,
+                PinDirection::Input,
+            ])
+        )
+    }
+}
+
 
 #[derive(Debug)]
 pub enum Command {
@@ -198,6 +249,9 @@ pub enum Command {
     SetClockDivisor {
         divisor: u16,
     },
+    WaitForIo {
+        value: PinValue,
+    }
 }
 
 impl Command {
@@ -225,6 +279,7 @@ impl Command {
             Self::ReadBits { range: _ } => 1,
             Self::SetLoopback { enable: _ } => 0,
             Self::SetClockDivisor { divisor: _ } => 0,
+            Self::WaitForIo { value: _ } => 1,
         }
     }
 }
@@ -319,6 +374,12 @@ impl Into<Vec<u8>> for Command {
                 let mut result = vec![0x86];
                 result.extend_from_slice(&divisor.to_le_bytes());
                 result
+            }
+            Self::WaitForIo { value } => {
+                match value {
+                    PinValue::High => vec![0x88],
+                    PinValue::Low => vec![0x89],
+                }
             }
         }
     }

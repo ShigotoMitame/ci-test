@@ -43,10 +43,24 @@ impl Builder {
         }
     }
 
+    pub fn read_pins(self, range: PinRange) -> ReadPinsBuilder {
+        ReadPinsBuilder {
+            parent: self,
+            range,
+        }
+    }
+
     pub fn set_frequency(self, frequency: f64) -> SetFrequencyBuilder {
         SetFrequencyBuilder {
             parent: self,
             frequency,
+        }
+    }
+
+    pub fn wait_for_io(self, value: PinValue) -> WaitForIoBuilder {
+        WaitForIoBuilder {
+            parent: self,
+            value
         }
     }
 
@@ -195,6 +209,54 @@ impl SetFrequencyBuilder {
     }
 }
 
+#[derive(Debug)]
+pub struct WaitForIoBuilder {
+    parent: Builder,
+    value: PinValue
+}
+
+impl WaitForIoBuilder {
+    fn commit(mut self) -> Builder {
+        self.parent.commands.push(
+            Command::WaitForIo {value: self.value},
+        );
+
+        self.parent
+    }
+
+    pub fn then(self) -> Builder {
+        self.commit()
+    }
+
+    pub fn build(self) -> CommandList {
+        self.commit().build()
+    }
+}
+
+#[derive(Debug)]
+pub struct ReadPinsBuilder {
+    parent: Builder,
+    range: PinRange,
+}
+
+impl ReadPinsBuilder {
+    fn commit(mut self) -> Builder {
+        self.parent.commands.push(
+            Command::ReadBits {range: self.range},
+        );
+
+        self.parent
+    }
+
+    pub fn then(self) -> Builder {
+        self.commit()
+    }
+
+    pub fn build(self) -> CommandList {
+        self.commit().build()
+    }
+}
+
 #[cfg(test)]
 mod write_builder_tests {
     use super::*;
@@ -211,10 +273,7 @@ mod write_builder_tests {
 
         let command_bytes: Vec<u8> = commands.into_iter().collect();
 
-        assert_eq!(
-            command_bytes,
-            vec![0x10, 0x03, 0x00, 0x10, 0x01, 0x20, 0x01]
-        );
+        assert_eq!(command_bytes, vec![0x10, 0x03, 0x00, 0x10, 0x01, 0x20, 0x01]);
     }
 }
 
@@ -242,10 +301,12 @@ mod set_freq_tests {
 
     #[test]
     fn syntax_test() {
-        let commands = Builder::new().set_frequency(5000.0).build();
+        let commands = Builder::new()
+            .set_frequency(5000.0)
+            .build();
 
         let command_bytes: Vec<u8> = commands.into_iter().collect();
 
-        assert_eq!(command_bytes, vec![0x86, 0xAF, 0x04]);
+        assert_eq!(command_bytes, vec![0x86, 0xAF , 0x04]);
     }
 }
