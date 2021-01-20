@@ -1,6 +1,6 @@
 [package]
 name = "mpsse"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Nanashi Mitame <gitcommits@mita.me>"]
 edition = "2018"
 license = "LGPL-2.0-or-later"

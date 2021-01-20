@@ -1,8 +1,8 @@
-mod command;
+pub mod command;
 
-use self::command::{BitDirection, ClockDirection, Command, CommandList, DataShiftOptions};
+use self::command::{Command, CommandList, DataShiftOptions};
 
-pub use self::command::{PinDirection, PinDirectionArray, PinRange, PinValue, PinValueArray};
+pub use self::command::{BitDirection, ClockDirection, PinDirection, PinDirectionArray, PinRange, PinValue, PinValueArray};
 
 #[derive(Debug)]
 pub struct Builder {
