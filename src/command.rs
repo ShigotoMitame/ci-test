@@ -1,6 +1,3 @@
-use std::iter::Map;
-use std::ops::BitOr;
-
 #[derive(Debug)]
 pub enum ClockDirection {
     Rising,
@@ -71,10 +68,10 @@ impl Into<u8> for FullDataShiftOptions {
 #[derive(Debug)]
 pub struct DataShiftOptions {
     pub clock_direction: ClockDirection,
-    pub bit_direction: BitDirection
+    pub bit_direction: BitDirection,
 }
 
-impl Into<FullDataShiftOptions> for DataShiftOptions{
+impl Into<FullDataShiftOptions> for DataShiftOptions {
     fn into(self) -> FullDataShiftOptions {
         FullDataShiftOptions {
             read_clock_direction: self.clock_direction,
@@ -125,8 +122,8 @@ impl From<u8> for PinValueArray {
         for i in 0..8 {
             match (value >> 7 & 0x01) == 1 {
                 true => result[i] = PinValue::High,
-                false => result[i] = PinValue::Low
-            } 
+                false => result[i] = PinValue::Low,
+            }
         }
         PinValueArray(result)
     }
@@ -161,8 +158,8 @@ impl From<u8> for PinDirectionArray {
         for i in 0..8 {
             match (value >> 7 & 0x01) == 1 {
                 true => result[i] = PinDirection::Output,
-                false => result[i] = PinDirection::Input
-            } 
+                false => result[i] = PinDirection::Input,
+            }
         }
         PinDirectionArray(result)
     }
@@ -207,15 +204,18 @@ impl Command {
     pub fn expected_response_length(&self) -> usize {
         match self {
             Self::ReadDataShiftBits {
-                options,
+                options: _,
                 length: _,
             } => 1,
             Self::WriteDataShiftBits {
-                options,
+                options: _,
                 bits: _,
                 length: _,
             } => 0,
-            Self::WriteDataShiftBytes { options: _, bytes: _ } => 0,
+            Self::WriteDataShiftBytes {
+                options: _,
+                bytes: _,
+            } => 0,
             Self::ReadDataShiftBytes { options: _, length } => length.to_owned() as usize,
             Self::SetBits {
                 range: _,
@@ -247,10 +247,7 @@ impl Into<Vec<u8>> for Command {
 
                 vec![opcode | 0x02, length - 1, bits]
             }
-            Self::ReadDataShiftBits {
-                options,
-                length,
-            } => {
+            Self::ReadDataShiftBits { options, length } => {
                 let full_options = FullDataShiftOptions {
                     write_clock_direction: options.clock_direction,
                     bit_direction: options.bit_direction,
@@ -365,6 +362,9 @@ impl Into<Vec<u8>> for CommandList {
 
 impl CommandList {
     pub fn expected_response_length(self) -> usize {
-        self.0.iter().map(|cmd| cmd.expected_response_length()).fold(0, |acc, cur| acc + cur)
+        self.0
+            .iter()
+            .map(|cmd| cmd.expected_response_length())
+            .fold(0, |acc, cur| acc + cur)
     }
 }
