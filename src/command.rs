@@ -123,7 +123,7 @@ impl From<u8> for PinValueArray {
         for i in 0..8 {
             match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinValue::High,
-                false => result[i] = PinValue::Low
+                false => result[i] = PinValue::Low,
             }
         }
         PinValueArray(result)
@@ -184,7 +184,7 @@ impl From<u8> for PinDirectionArray {
         for i in 0..8 {
             match (value << i & 0x80) == 0x80 {
                 true => result[i] = PinDirection::Output,
-                false => result[i] = PinDirection::Input
+                false => result[i] = PinDirection::Input,
             }
         }
         PinDirectionArray(result)
@@ -214,7 +214,6 @@ mod pin_direction_array_tests {
         )
     }
 }
-
 
 #[derive(Debug)]
 pub enum Command {
@@ -251,7 +250,7 @@ pub enum Command {
     },
     WaitForIo {
         value: PinValue,
-    }
+    },
 }
 
 impl Command {
@@ -375,12 +374,10 @@ impl Into<Vec<u8>> for Command {
                 result.extend_from_slice(&divisor.to_le_bytes());
                 result
             }
-            Self::WaitForIo { value } => {
-                match value {
-                    PinValue::High => vec![0x88],
-                    PinValue::Low => vec![0x89],
-                }
-            }
+            Self::WaitForIo { value } => match value {
+                PinValue::High => vec![0x88],
+                PinValue::Low => vec![0x89],
+            },
         }
     }
 }
