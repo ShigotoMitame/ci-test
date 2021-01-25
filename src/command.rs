@@ -1,19 +1,35 @@
+/// Edge of the clock on which to action data.
 #[derive(Debug)]
-pub enum ClockDirection {
+pub enum ClockEdge {
+    /// Action the data on the rising edge of the clock (from Low to High).
     Rising,
+    /// Action the data on the falling edge of the clock (from High to Low).
     Falling,
 }
 
+/// The order of the bits in which to read/write the data.
 #[derive(Debug)]
 pub enum BitDirection {
+    /// Read/write the least significant bit first
+    ///
+    /// ```no_run
+    /// 0x02 = 0, 1, 0, 0, 0, 0, 0, 0
+    ///        ^ first
+    /// ```
     LsbFirst,
+    /// Read/write the most significant bit first
+    ///
+    /// ```no_run
+    /// 0x02 = 0, 0, 0, 0, 0, 0, 1, 0
+    ///        ^ first
+    /// ```
     MsbFirst,
 }
 
 #[derive(Debug)]
 struct FullDataShiftOptions {
-    read_clock_direction: ClockDirection,
-    write_clock_direction: ClockDirection,
+    read_clock_direction: ClockEdge,
+    write_clock_direction: ClockEdge,
     bit_direction: BitDirection,
     write_tdi: bool,
     read_tdo: bool,
@@ -23,8 +39,8 @@ struct FullDataShiftOptions {
 impl Default for FullDataShiftOptions {
     fn default() -> Self {
         FullDataShiftOptions {
-            read_clock_direction: ClockDirection::Rising,
-            write_clock_direction: ClockDirection::Rising,
+            read_clock_direction: ClockEdge::Rising,
+            write_clock_direction: ClockEdge::Rising,
             bit_direction: BitDirection::MsbFirst,
             write_tdi: false,
             read_tdo: false,
@@ -37,12 +53,12 @@ impl Into<u8> for FullDataShiftOptions {
     fn into(self) -> u8 {
         let mut byte = 0;
         byte |= match self.write_clock_direction {
-            ClockDirection::Rising => 0x00,
-            ClockDirection::Falling => 0x01,
+            ClockEdge::Rising => 0x00,
+            ClockEdge::Falling => 0x01,
         };
         byte |= match self.read_clock_direction {
-            ClockDirection::Rising => 0x00,
-            ClockDirection::Falling => 0x04,
+            ClockEdge::Rising => 0x00,
+            ClockEdge::Falling => 0x04,
         };
         byte |= match self.bit_direction {
             BitDirection::MsbFirst => 0x00,
@@ -67,7 +83,7 @@ impl Into<u8> for FullDataShiftOptions {
 
 #[derive(Debug)]
 pub struct DataShiftOptions {
-    pub clock_direction: ClockDirection,
+    pub clock_direction: ClockEdge,
     pub bit_direction: BitDirection,
 }
 

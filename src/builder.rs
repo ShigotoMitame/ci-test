@@ -2,7 +2,7 @@
 use crate::command::{Command, CommandList, DataShiftOptions};
 
 pub use crate::command::{
-    BitDirection, ClockDirection, PinDirection, PinDirectionArray, PinRange, PinValue,
+    BitDirection, ClockEdge, PinDirection, PinDirectionArray, PinRange, PinValue,
     PinValueArray,
 };
 
@@ -43,11 +43,11 @@ impl Builder {
     /// * `data` - The data to write out.
     ///
     /// ```
-    /// use mpsse::{Builder, ClockDirection, BitDirection};
+    /// use mpsse::{Builder, ClockEdge, BitDirection};
     ///
     /// let commands = Builder::new()
     ///     .write_data(vec![0xD, 0xEC, 0xAF])
-    ///     .with_clock_direction(ClockDirection::Rising)
+    ///     .with_clock_direction(ClockEdge::Rising)
     ///     .with_bit_direction(BitDirection::MsbFirst)
     ///     .build();
     ///
@@ -57,7 +57,7 @@ impl Builder {
         WriteBuilder {
             parent: self,
             data,
-            clock_direction: ClockDirection::Rising,
+            clock_direction: ClockEdge::Rising,
             bit_direction: BitDirection::MsbFirst,
         }
     }
@@ -70,11 +70,11 @@ impl Builder {
     /// * `length` - The number of bytes to read out.
     ///
     /// ```
-    /// use mpsse::{Builder, ClockDirection, BitDirection};
+    /// use mpsse::{Builder, ClockEdge, BitDirection};
     ///
     /// let commands = Builder::new()
     ///     .read_data(328)
-    ///     .with_clock_direction(ClockDirection::Rising)
+    ///     .with_clock_direction(ClockEdge::Rising)
     ///     .with_bit_direction(BitDirection::MsbFirst)
     ///     .build();
     ///
@@ -84,7 +84,7 @@ impl Builder {
         ReadBuilder {
             parent: self,
             length,
-            clock_direction: ClockDirection::Rising,
+            clock_direction: ClockEdge::Rising,
             bit_direction: BitDirection::MsbFirst,
         }
     }
@@ -206,7 +206,7 @@ impl Builder {
 pub struct ReadBuilder {
     parent: Builder,
     length: u16,
-    clock_direction: ClockDirection,
+    clock_direction: ClockEdge,
     bit_direction: BitDirection,
 }
 
@@ -216,19 +216,19 @@ impl ReadBuilder {
     /// By default, the ReadBuilder will build the command with the clock direction set Rising (meaning read on the rising clock).
     ///
     /// ```
-    /// use mpsse::{Builder, ClockDirection};
+    /// use mpsse::{Builder, ClockEdge};
     ///
     /// let commands = Builder::new()
     ///     .read_data(1)
-    ///     .with_clock_direction(ClockDirection::Rising)
+    ///     .with_clock_direction(ClockEdge::Rising)
     ///     .then()
     ///     .read_data(1)
-    ///     .with_clock_direction(ClockDirection::Falling)
+    ///     .with_clock_direction(ClockEdge::Falling)
     ///     .build();
     ///
     /// assert_eq!(commands, vec![0x20, 0x00, 0x00, 0x21, 0x00, 0x00])
     /// ```
-    pub fn with_clock_direction(self, direction: ClockDirection) -> Self {
+    pub fn with_clock_direction(self, direction: ClockEdge) -> Self {
         ReadBuilder {
             clock_direction: direction,
             ..self
@@ -280,7 +280,7 @@ impl ReadBuilder {
 pub struct WriteBuilder {
     parent: Builder,
     data: Vec<u8>,
-    clock_direction: ClockDirection,
+    clock_direction: ClockEdge,
     bit_direction: BitDirection,
 }
 
@@ -290,19 +290,19 @@ impl WriteBuilder {
     /// By default, the WriteBuilder will build the command with the clock direction set Rising (meaning read on the rising clock).
     ///
     /// ```
-    /// use mpsse::{Builder, ClockDirection};
+    /// use mpsse::{Builder, ClockEdge};
     ///
     /// let commands = Builder::new()
     ///     .write_data(vec![0x01])
-    ///     .with_clock_direction(ClockDirection::Rising)
+    ///     .with_clock_direction(ClockEdge::Rising)
     ///     .then()
     ///     .write_data(vec![0x01])
-    ///     .with_clock_direction(ClockDirection::Falling)
+    ///     .with_clock_direction(ClockEdge::Falling)
     ///     .build();
     ///
     /// assert_eq!(commands, vec![0x10, 0x00, 0x00, 0x01, 0x11, 0x00, 0x00, 0x01])
     /// ```
-    pub fn with_clock_direction(self, direction: ClockDirection) -> Self {
+    pub fn with_clock_direction(self, direction: ClockEdge) -> Self {
         WriteBuilder {
             clock_direction: direction,
             ..self
@@ -442,7 +442,7 @@ mod write_builder_tests {
 
         let commands = Builder::new()
             .write_data(data)
-            .with_clock_direction(ClockDirection::Rising)
+            .with_clock_direction(ClockEdge::Rising)
             .with_bit_direction(BitDirection::MsbFirst)
             .build();
 
@@ -463,7 +463,7 @@ mod read_builder_tests {
     fn syntax_test() {
         let commands = Builder::new()
             .read_data(15)
-            .with_clock_direction(ClockDirection::Rising)
+            .with_clock_direction(ClockEdge::Rising)
             .with_bit_direction(BitDirection::MsbFirst)
             .build();
 

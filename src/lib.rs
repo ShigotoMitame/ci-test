@@ -2,14 +2,14 @@
 //! A builder for [FTDI's MPSSE commands](https://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf).
 //!
 //! ```
-//! use mpsse::{Builder, ClockDirection};
+//! use mpsse::{Builder, ClockEdge};
 //!
 //! pub fn main() {
 //!     let commands = Builder::new()
 //!         .set_frequency(100_000.0)
 //!         .then()
 //!         .read_data(15)
-//!         .with_clock_direction(ClockDirection::Rising)
+//!         .with_clock_direction(ClockEdge::Rising)
 //!         .build();
 //!
 //!
@@ -24,7 +24,7 @@ pub mod builder;
 pub mod command;
 
 pub use command::{
-    BitDirection, ClockDirection, PinDirection, PinDirectionArray, PinRange, PinValue,
+    BitDirection, ClockEdge, PinDirection, PinDirectionArray, PinRange, PinValue,
     PinValueArray,
 };
 
