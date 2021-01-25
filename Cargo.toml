@@ -1,15 +1,12 @@
 [package]
 name = "mpsse"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Nanashi Mitame <gitcommits@mita.me>"]
 edition = "2018"
-license = "LGPL-2.0-or-later"
+license = "MPL-2.0"
 description = "Build MPSSE commands for FTDI modules"
 repository = "https://git.mita.me/Mitame/mpsse-rs"
 readme = "README.md"
-
-[lib]
-crate_type = ["dylib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
