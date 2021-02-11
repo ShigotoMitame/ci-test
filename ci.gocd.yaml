@@ -8,8 +8,8 @@ pipelines:
     materials:
       git-71ec009:
         git: https://git.mita.me/Mitame/CI-test
-        shallow_clone: false
-        auto_update: false
+        shallow_clone: true
+        auto_update: true
         branch: main
     stages:
     - Test:
