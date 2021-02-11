@@ -9,7 +9,7 @@ pipelines:
       git-71ec009:
         git: https://git.mita.me/Mitame/CI-test
         shallow_clone: false
-        auto_update: true
+        auto_update: false
         branch: main
     stages:
     - Test:
