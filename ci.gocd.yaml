@@ -20,6 +20,15 @@ pipelines:
           type: success
           allow_only_on_success: false
         jobs:
+          prepare:
+            timeout: 0
+            tasks:
+            - exec:
+              arguments:
+              - add
+              - cargo
+              command: apk
+              run_if: passed
           test:
             timeout: 0
             tasks:
